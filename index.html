@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Gestor de Tareas - Aplicación para organizar tus pendientes">
+    <title>Gestor de Tareas | ToDo App</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header class="app-header">
+        <div class="container">
+            <h1 class="app-title">
+                <svg class="icon-check" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <path d="M9 11l3 3L22 4"></path>
+                    <path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"></path>
+                </svg>
+                Gestor de Tareas
+            </h1>
+            <p class="app-subtitle">Organiza tus pendientes de forma eficiente</p>
+        </div>
+    </header>
+
+    <main class="app-main">
+        <div class="container">
+            <!-- Sección de estadísticas -->
+            <section class="stats-section" aria-label="Estadísticas de tareas">
+                <div class="stat-card">
+                    <span class="stat-label">Total</span>
+                    <span class="stat-value" id="total-tasks">0</span>
+                </div>
+                <div class="stat-card stat-card--pending">
+                    <span class="stat-label">Pendientes</span>
+                    <span class="stat-value" id="pending-tasks">0</span>
+                </div>
+                <div class="stat-card stat-card--completed">
+                    <span class="stat-label">Completadas</span>
+                    <span class="stat-value" id="completed-tasks">0</span>
+                </div>
+            </section>
+
+            <!-- Sección de filtros -->
+            <section class="filter-section" aria-label="Filtros de tareas">
+                <div class="filter-buttons" role="group" aria-label="Filtrar tareas por estado">
+                    <button class="filter-btn active" data-filter="all" aria-pressed="true">
+                        Todas
+                    </button>
+                    <button class="filter-btn" data-filter="pending" aria-pressed="false">
+                        Pendientes
+                    </button>
+                    <button class="filter-btn" data-filter="completed" aria-pressed="false">
+                        Completadas
+                    </button>
+                </div>
+            </section>
+
+            <!-- Sección de formulario -->
+            <section class="form-section" aria-label="Agregar nueva tarea">
+                <h2 class="section-title">Nueva Tarea</h2>
+                <form id="task-form" class="task-form" novalidate>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="task-title" class="form-label">
+                                Título <span class="required">*</span>
+                            </label>
+                            <input 
+                                type="text" 
+                                id="task-title" 
+                                name="title"
+                                class="form-input" 
+                                placeholder="Ej: Completar informe mensual"
+                                required
+                                minlength="3"
+                                aria-required="true"
+                                aria-describedby="title-error"
+                            >
+                            <span class="error-message" id="title-error"></span>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="task-priority" class="form-label">
+                                Prioridad <span class="required">*</span>
+                            </label>
+                            <select 
+                                id="task-priority" 
+                                name="priority"
+                                class="form-select"
+                                required
+                                aria-required="true"
+                            >
+                                <option value="">Seleccionar prioridad</option>
+                                <option value="low">Baja</option>
+                                <option value="medium">Media</option>
+                                <option value="high">Alta</option>
+                            </select>
+                            <span class="error-message" id="priority-error"></span>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="task-deadline" class="form-label">
+                                Fecha límite
+                            </label>
+                            <input 
+                                type="date" 
+                                id="task-deadline" 
+                                name="deadline"
+                                class="form-input"
+                                aria-describedby="deadline-hint"
+                            >
+                            <small class="form-hint" id="deadline-hint">Opcional</small>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="task-description" class="form-label">
+                            Descripción
+                        </label>
+                        <textarea 
+                            id="task-description" 
+                            name="description"
+                            class="form-textarea" 
+                            rows="3"
+                            placeholder="Detalles adicionales sobre la tarea..."
+                        ></textarea>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary" id="submit-btn">
+                            <svg class="btn-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                <line x1="12" y1="5" x2="12" y2="19"></line>
+                                <line x1="5" y1="12" x2="19" y2="12"></line>
+                            </svg>
+                            Agregar Tarea
+                        </button>
+                        <button type="button" class="btn btn-secondary" id="cancel-btn" style="display: none;">
+                            Cancelar
+                        </button>
+                    </div>
+                </form>
+            </section>
+
+            <!-- Sección de lista de tareas -->
+            <section class="tasks-section" aria-label="Lista de tareas">
+                <h2 class="section-title">Mis Tareas</h2>
+                <div id="tasks-list" class="tasks-list">
+                    <!-- Las tareas se cargarán dinámicamente aquí -->
+                </div>
+                <div id="empty-state" class="empty-state">
+                    <svg class="empty-icon" width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <path d="M9 11l3 3L22 4"></path>
+                        <path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"></path>
+                    </svg>
+                    <h3 class="empty-title">No hay tareas</h3>
+                    <p class="empty-description">Comienza agregando tu primera tarea</p>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <footer class="app-footer">
+        <div class="container">
+            <p>&copy; 2026 Gestor de Tareas. Desarrollado para GLOBTECx</p>
+        </div>
+    </footer>
+
+    <!-- Modal de confirmación -->
+    <div id="confirm-modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+        <div class="modal-content">
+            <h3 id="modal-title" class="modal-title">Confirmar eliminación</h3>
+            <p class="modal-message">¿Estás seguro de que deseas eliminar esta tarea?</p>
+            <div class="modal-actions">
+                <button class="btn btn-danger" id="confirm-delete-btn">Eliminar</button>
+                <button class="btn btn-secondary" id="cancel-delete-btn">Cancelar</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
