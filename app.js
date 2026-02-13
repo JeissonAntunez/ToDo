@@ -1,11 +1,6 @@
-/**
- * Gestor de Tareas - Estilo Notion/Asana
- * Arquitectura: MVC + Module Pattern + Observer Pattern
- */
 
-// ====================================================================
-// UTILIDADES
-// ====================================================================
+
+// UTILIDADES - Funciones auxiliares para generación de IDs, formateo de fechas, validación de vencidos, etc.
 
 const Utils = {
     generateId() {
@@ -41,12 +36,14 @@ const Utils = {
             .join('')
             .toUpperCase()
             .slice(0, 2);
+    },
+
+    isMobile() {
+        return window.innerWidth <= 768;
     }
 };
 
-// ====================================================================
-// STORAGE SERVICE
-// ====================================================================
+// STORAGE SERVICE - Encapsula el acceso a localStorage con manejo de errores
 
 const StorageService = (() => {
     const STORAGE_KEY = 'notion_tasks';
@@ -74,9 +71,7 @@ const StorageService = (() => {
     };
 })();
 
-// ====================================================================
-// TASK MODEL
-// ====================================================================
+// Task de Model
 
 class Task {
     constructor(data) {
@@ -87,9 +82,8 @@ class Task {
         this.deadline = data.deadline || '';
         this.priority = data.priority;
         this.summary = data.summary || '';
-        this.description = data.description  || '';
+        this.description = data.description || '';
         this.tags = data.tags || [];
-
         this.completed = data.completed || this.status === 'completed';
         this.createdAt = data.createdAt || new Date().toISOString();
         this.updatedAt = data.updatedAt || new Date().toISOString();
@@ -125,9 +119,7 @@ class Task {
     }
 }
 
-// ====================================================================
-// VALIDATOR
-// ====================================================================
+// VALIDACIÓN DE FORMULARIOS
 
 const Validator = {
     validateTask(data) {
@@ -141,8 +133,7 @@ const Validator = {
             errors.priority = 'Debes seleccionar una prioridad';
         }
 
-        // Validar SOLO si el usuario escribió algo
-        if (!data.description && data.description.trim().length < 3) {
+        if (data.description && data.description.trim().length < 3) {
             errors.description = 'La descripción debe tener al menos 3 caracteres';
         }
 
@@ -153,12 +144,17 @@ const Validator = {
     }
 };
 
-// ====================================================================
-// UI CONTROLLER
-// ====================================================================
 
 const UIController = (() => {
     const DOM = {
+        // Mobile
+        mobileHeader: document.querySelector('.mobile-header'),
+        hamburgerBtn: document.getElementById('hamburger-btn'),
+        mobileNewTaskBtn: document.getElementById('mobile-new-task-btn'),
+        closeSidebar: document.getElementById('close-sidebar'),
+        sidebarOverlay: document.getElementById('sidebar-overlay'),
+        sidebar: document.getElementById('sidebar'),
+
         // Sidebar
         sidebarTotal: document.getElementById('sidebar-total'),
         sidebarPending: document.getElementById('sidebar-pending'),
@@ -170,6 +166,7 @@ const UIController = (() => {
         // Project
         projectCount: document.getElementById('project-count'),
         tasksTableBody: document.getElementById('tasks-table-body'),
+        tasksCardsBody: document.getElementById('tasks-cards-body'),
         completeCount: document.getElementById('complete-count'),
         emptyState: document.getElementById('empty-state'),
 
@@ -192,9 +189,7 @@ const UIController = (() => {
         taskPriority: document.getElementById('task-priority'),
         taskResponsible: document.getElementById('task-responsible'),
         taskDate: document.getElementById('task-date'),
-        taskSummary: document.getElementById('task-summary'),
         taskDescription: document.getElementById('task-description'),
-        taskTags: document.getElementById('task-tags'),
         
         // Errors
         nameError: document.getElementById('name-error'),
@@ -218,105 +213,110 @@ const UIController = (() => {
         'high': 'Alta'
     };
 
-    // const renderTask = (task) => {
-    //     const isOverdue = Utils.isOverdue(task.deadline) && !task.completed;
-    //     const formattedDate = Utils.formatDate(task.deadline);
+    const renderTask = (task) => {
+        const isOverdue = Utils.isOverdue(task.deadline) && !task.completed;
+        const formattedDate = Utils.formatDate(task.deadline);
 
-    //     return `
-    //         <div class="table-row" data-task-id="${task.id}">
-    //             <div class="table-cell table-cell-checkbox">
-    //                 <div class="task-checkbox ${task.completed ? 'checked' : ''}" 
-    //                      data-action="toggle"></div>
-    //             </div>
-    //             <div class="table-cell table-cell-name">
-    //                 <span class="task-name ${task.completed ? 'completed' : ''}">${Utils.escapeHtml(task.name)}</span>
-    //             </div>
-    //             <div class="table-cell table-cell-status">
-    //                 <span class="status-badge status-${task.status}">
-    //                     <span class="status-badge-dot"></span>
-    //                     ${statusLabels[task.status]}
-    //                 </span>
-    //             </div>
-    //             <div class="table-cell table-cell-responsible">
-    //                 ${task.responsible ? `
-    //                     <div class="task-responsible">
-    //                         <div class="responsible-avatar">${Utils.getInitials(task.responsible)}</div>
-    //                         <span>${Utils.escapeHtml(task.responsible)}</span>
-    //                     </div>
-    //                 ` : '<span class="text-tertiary">-</span>'}
-    //             </div>
-    //             <div class="table-cell table-cell-date">
-    //                 ${formattedDate ? `
-    //                     <span class="task-date ${isOverdue ? 'overdue' : ''}">${formattedDate}</span>
-    //                 ` : '<span class="text-tertiary">-</span>'}
-    //             </div>
-    //             <div class="table-cell table-cell-priority">
-    //                 <span class="priority-badge priority-${task.priority}">${priorityLabels[task.priority]}</span>
-    //             </div>
-    //             <div class="table-cell table-cell-description">
-    //                 <span class="task-description">${task.description ? Utils.escapeHtml(task.description) : '-'}</span>
-    //             </div>
-    //         </div>
-    //     `;
-    // };
+        return `
+            <div class="table-row" data-task-id="${task.id}">
+                <div class="table-cell table-cell-checkbox">
+                    <div class="task-checkbox ${task.completed ? 'checked' : ''}" 
+                         data-action="toggle"></div>
+                </div>
+                <div class="table-cell table-cell-name">
+                    <span class="task-name ${task.completed ? 'completed' : ''}" 
+                          title="${Utils.escapeHtml(task.name)}">
+                        ${Utils.escapeHtml(task.name)}
+                    </span>
+                </div>
+                <div class="table-cell table-cell-status">
+                    <span class="status-badge status-${task.status}">
+                        <span class="status-badge-dot"></span>
+                        ${statusLabels[task.status]}
+                    </span>
+                </div>
+                <div class="table-cell table-cell-responsible">
+                    ${task.responsible ? `
+                        <div class="task-responsible">
+                            <div class="responsible-avatar">${Utils.getInitials(task.responsible)}</div>
+                            <span>${Utils.escapeHtml(task.responsible)}</span>
+                        </div>
+                    ` : '<span class="text-tertiary">-</span>'}
+                </div>
+                <div class="table-cell table-cell-date">
+                    ${formattedDate ? `
+                        <span class="task-date ${isOverdue ? 'overdue' : ''}">${formattedDate}</span>
+                    ` : '<span class="text-tertiary">-</span>'}
+                </div>
+                <div class="table-cell table-cell-priority">
+                    <span class="priority-badge priority-${task.priority}">${priorityLabels[task.priority]}</span>
+                </div>
+                <div class="table-cell table-cell-description">
+                    <span class="task-description" 
+                          title="${task.description ? Utils.escapeHtml(task.description) : ''}">
+                        ${task.description ? Utils.escapeHtml(task.description) : '-'}
+                    </span>
+                </div>
+            </div>
+        `;
+    };
 
-const renderTask = (task) => {
-    const isOverdue = Utils.isOverdue(task.deadline) && !task.completed;
-    const formattedDate = Utils.formatDate(task.deadline);
+    const renderTaskCard = (task) => {
+        const isOverdue = Utils.isOverdue(task.deadline) && !task.completed;
+        const formattedDate = Utils.formatDate(task.deadline);
 
-    return `
-        <div class="table-row" data-task-id="${task.id}">
-            <div class="table-cell table-cell-checkbox">
-                <div class="task-checkbox ${task.completed ? 'checked' : ''}" 
-                     data-action="toggle"></div>
-            </div>
-            <div class="table-cell table-cell-name">
-                <span class="task-name ${task.completed ? 'completed' : ''}" 
-                      title="${Utils.escapeHtml(task.name)}">
-                    ${Utils.escapeHtml(task.name)}
-                </span>
-            </div>
-            <div class="table-cell table-cell-status">
-                <span class="status-badge status-${task.status}">
-                    <span class="status-badge-dot"></span>
-                    ${statusLabels[task.status]}
-                </span>
-            </div>
-            <div class="table-cell table-cell-responsible">
-                ${task.responsible ? `
-                    <div class="task-responsible">
-                        <div class="responsible-avatar">${Utils.getInitials(task.responsible)}</div>
-                        <span>${Utils.escapeHtml(task.responsible)}</span>
+        return `
+            <div class="task-card" data-task-id="${task.id}">
+                <div class="task-card-header">
+                    <div class="task-card-checkbox">
+                        <div class="task-checkbox ${task.completed ? 'checked' : ''}" 
+                             data-action="toggle"></div>
                     </div>
-                ` : '<span class="text-tertiary">-</span>'}
+                    <div class="task-card-content">
+                        <div class="task-card-title ${task.completed ? 'completed' : ''}">
+                            ${Utils.escapeHtml(task.name)}
+                        </div>
+                        ${task.description ? `
+                            <div class="task-card-description">
+                                ${Utils.escapeHtml(task.description)}
+                            </div>
+                        ` : ''}
+                        <div class="task-card-meta">
+                            <span class="status-badge status-${task.status}">
+                                <span class="status-badge-dot"></span>
+                                ${statusLabels[task.status]}
+                            </span>
+                            <span class="priority-badge priority-${task.priority}">
+                                ${priorityLabels[task.priority]}
+                            </span>
+                            ${task.responsible ? `
+                                <div class="task-responsible">
+                                    <div class="responsible-avatar">${Utils.getInitials(task.responsible)}</div>
+                                    <span>${Utils.escapeHtml(task.responsible)}</span>
+                                </div>
+                            ` : ''}
+                            ${formattedDate ? `
+                                <span class="task-date ${isOverdue ? 'overdue' : ''}">${formattedDate}</span>
+                            ` : ''}
+                        </div>
+                    </div>
+                </div>
             </div>
-            <div class="table-cell table-cell-date">
-                ${formattedDate ? `
-                    <span class="task-date ${isOverdue ? 'overdue' : ''}">${formattedDate}</span>
-                ` : '<span class="text-tertiary">-</span>'}
-            </div>
-            <div class="table-cell table-cell-priority">
-                <span class="priority-badge priority-${task.priority}">${priorityLabels[task.priority]}</span>
-            </div>
-            <div class="table-cell table-cell-description">
-                <span class="task-description" 
-                      title="${task.description ? Utils.escapeHtml(task.description) : ''}">
-                    ${task.description ? Utils.escapeHtml(task.description) : '-'}
-                </span>
-            </div>
-        </div>
-    `;
-};
+        `;
+    };
 
     const renderTasks = (tasks) => {
         if (tasks.length === 0) {
             DOM.tasksTableBody.innerHTML = '';
+            DOM.tasksCardsBody.innerHTML = '';
             DOM.emptyState.classList.add('show');
             document.querySelector('.project-section').style.display = 'none';
         } else {
             DOM.emptyState.classList.remove('show');
             document.querySelector('.project-section').style.display = 'block';
+            
             DOM.tasksTableBody.innerHTML = tasks.map(renderTask).join('');
+            DOM.tasksCardsBody.innerHTML = tasks.map(renderTaskCard).join('');
         }
     };
 
@@ -341,9 +341,7 @@ const renderTask = (task) => {
             DOM.taskPriority.value = task.priority;
             DOM.taskResponsible.value = task.responsible;
             DOM.taskDate.value = task.deadline;
-            // DOM.taskSummary.value = task.summary;
             DOM.taskDescription.value = task.description;
-            // DOM.taskTags.value = task.tags.join(', ');
             DOM.taskForm.setAttribute('data-edit-id', task.id);
         } else {
             DOM.modalTitle.textContent = 'Nueva Tarea';
@@ -371,7 +369,7 @@ const renderTask = (task) => {
         if (errors.priority) {
             DOM.priorityError.textContent = errors.priority;
         }
-        if(errors.description){
+        if (errors.description) {
             DOM.descriptionError.textContent = errors.description;
         }
     };
@@ -450,28 +448,12 @@ const renderTask = (task) => {
                         <span class="priority-badge priority-${task.priority}">${priorityLabels[task.priority]}</span>
                     </div>
                 </div>
-
-                ${task.tags.length > 0 ? `
-                    <div class="panel-field">
-                        <div class="panel-field-label">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                                <path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z"></path>
-                                <line x1="7" y1="7" x2="7.01" y2="7"></line>
-                            </svg>
-                            Etiquetas
-                        </div>
-                        <div class="panel-tags">
-                            ${task.tags.map(tag => `<span class="panel-tag">${Utils.escapeHtml(tag)}</span>`).join('')}
-                        </div>
-                    </div>
-                ` : ''}
             </div>
 
-            ${task.summary || task.description ? `
+            ${task.description ? `
                 <div class="panel-section">
-                    <div class="panel-section-title">Descripción</div>
-                    ${task.summary ? `<p style="color: var(--text-secondary); margin-bottom: 12px;"><strong>Resumen:</strong> ${Utils.escapeHtml(task.summary)}</p>` : ''}
-                    ${task.description ? `<p style="color: var(--text-secondary); white-space: pre-wrap;">${Utils.escapeHtml(task.description)}</p>` : ''}
+                    <div class="panel-section-title" style="font-size: 0.85rem; color: var(--text-tertiary); font-weight: 600; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.5px;">Descripción</div>
+                    <p style="color: var(--text-secondary); white-space: pre-wrap;">${Utils.escapeHtml(task.description)}</p>
                 </div>
             ` : ''}
 
@@ -488,6 +470,16 @@ const renderTask = (task) => {
         DOM.sidePanel.classList.remove('open');
     };
 
+    const toggleSidebar = () => {
+        DOM.sidebar.classList.toggle('open');
+        DOM.sidebarOverlay.classList.toggle('show');
+    };
+
+    const closeSidebarMobile = () => {
+        DOM.sidebar.classList.remove('open');
+        DOM.sidebarOverlay.classList.remove('show');
+    };
+
     return {
         DOM,
         renderTasks,
@@ -497,18 +489,19 @@ const renderTask = (task) => {
         showErrors,
         clearErrors,
         showPanel,
-        hidePanel
+        hidePanel,
+        toggleSidebar,
+        closeSidebarMobile
     };
 })();
 
-// ====================================================================
+
 // TASK CONTROLLER
-// ====================================================================
 
 const TaskController = (() => {
     let tasks = [];
     let selectedTask = null;
-    let currentFilter = 'all'; // Estado actual del filtro
+    let currentFilter = 'all';
 
     const init = () => {
         loadTasks();
@@ -529,39 +522,66 @@ const TaskController = (() => {
     const setupEventListeners = () => {
         const { DOM } = UIController;
 
+        // Mobile menu
+        if (DOM.hamburgerBtn) {
+            DOM.hamburgerBtn.addEventListener('click', () => UIController.toggleSidebar());
+        }
+        
+        if (DOM.closeSidebar) {
+            DOM.closeSidebar.addEventListener('click', () => UIController.closeSidebarMobile());
+        }
+        
+        if (DOM.sidebarOverlay) {
+            DOM.sidebarOverlay.addEventListener('click', () => UIController.closeSidebarMobile());
+        }
+        
+        if (DOM.mobileNewTaskBtn) {
+            DOM.mobileNewTaskBtn.addEventListener('click', () => UIController.showModal());
+        }
+
         // Modal
-        DOM.newTaskBtn.addEventListener('click', () => UIController.showModal());
+        DOM.newTaskBtn?.addEventListener('click', () => UIController.showModal());
         DOM.modalClose.addEventListener('click', () => UIController.hideModal());
         DOM.cancelModalBtn.addEventListener('click', () => UIController.hideModal());
         DOM.modalOverlay.addEventListener('click', () => UIController.hideModal());
         DOM.taskForm.addEventListener('submit', handleFormSubmit);
 
-        // Panel
         DOM.panelClose.addEventListener('click', () => UIController.hidePanel());
 
-        // Table events (delegation)
         DOM.tasksTableBody.addEventListener('click', handleTableClick);
+        DOM.tasksCardsBody.addEventListener('click', handleTableClick);
 
-        // Panel actions (delegation)
         DOM.panelContent.addEventListener('click', handlePanelAction);
 
-        // Filtros
         document.querySelectorAll('.filter-chip').forEach(btn => {
             btn.addEventListener('click', (e) => {
-                // Actualizar filtro activo
                 document.querySelectorAll('.filter-chip').forEach(b => b.classList.remove('active'));
                 e.target.classList.add('active');
-                
                 currentFilter = e.target.dataset.filter;
                 render();
+                
+              
+                if (Utils.isMobile()) {
+                    UIController.closeSidebarMobile();
+                }
             });
         });
 
-        // ESC key
+        
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') {
                 UIController.hideModal();
                 UIController.hidePanel();
+                if (Utils.isMobile()) {
+                    UIController.closeSidebarMobile();
+                }
+            }
+        });
+
+        
+        window.addEventListener('resize', () => {
+            if (!Utils.isMobile()) {
+                UIController.closeSidebarMobile();
             }
         });
     };
@@ -576,9 +596,7 @@ const TaskController = (() => {
             priority: DOM.taskPriority.value,
             responsible: DOM.taskResponsible.value.trim(),
             deadline: DOM.taskDate.value,
-            // summary: DOM.taskSummary.value.trim(),
             description: DOM.taskDescription.value.trim(),
-            // tags: DOM.taskTags.value ? DOM.taskTags.value.split(',').map(t => t.trim()).filter(Boolean) : []
         };
 
         const validation = Validator.validateTask(taskData);
@@ -599,10 +617,13 @@ const TaskController = (() => {
     };
 
     const handleTableClick = (e) => {
+        const card = e.target.closest('.task-card');
         const row = e.target.closest('.table-row');
-        if (!row) return;
+        const container = card || row;
+        
+        if (!container) return;
 
-        const taskId = row.dataset.taskId;
+        const taskId = container.dataset.taskId;
         const task = tasks.find(t => t.id === taskId);
         if (!task) return;
 
@@ -670,9 +691,9 @@ const TaskController = (() => {
         switch (currentFilter) {
             case 'pending':
                 return tasks.filter(task => 
-                task.status === 'todo' || task.status === 'in-progress' );
+                    task.status === 'todo' || task.status === 'in-progress');
             case 'completed':
-                return tasks.filter(task => task.completed || task.status === 'completed' );
+                return tasks.filter(task => task.completed || task.status === 'completed');
             default:
                 return tasks;
         }
@@ -681,20 +702,18 @@ const TaskController = (() => {
     const render = () => {
         const filteredTasks = getFilteredTasks();
         UIController.renderTasks(filteredTasks);
-        UIController.updateStats(tasks); // Stats siempre con todas las tareas
+        UIController.updateStats(tasks);
     };
 
     return { init };
 })();
 
-// ====================================================================
-// INIT
-// ====================================================================
+
+// INICIALIZACIÓN
+
 
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', TaskController.init);
 } else {
     TaskController.init();
 }
-
-
