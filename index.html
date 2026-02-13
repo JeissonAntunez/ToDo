@@ -3,175 +3,224 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Gestor de Tareas - Aplicación para organizar tus pendientes">
-    <title>Gestor de Tareas | ToDo App</title>
+    <meta name="description" content="Gestor de Tareas - Aplicación moderna para organizar proyectos">
+    <title>Todo | Gestor de Tareas</title>
     <link rel="stylesheet" href="style.css">
+    <link rel="icon" href="./img/ToDo.png" type="imagen/png">
 </head>
 <body>
-    <header class="app-header">
-        <div class="container">
-            <h1 class="app-title">
-                <svg class="icon-check" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                    <path d="M9 11l3 3L22 4"></path>
-                    <path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"></path>
-                </svg>
-                Gestor de Tareas
-            </h1>
-            <p class="app-subtitle">Organiza tus pendientes de forma eficiente</p>
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <div class="logo">
+                <img src="./img/ToDo.png" alt="logo" width="30px" height="auto">
+                <span>ToDo</span>
+            </div>
         </div>
-    </header>
 
-    <main class="app-main">
-        <div class="container">
-            <!-- Sección de estadísticas -->
-            <section class="stats-section" aria-label="Estadísticas de tareas">
-                <div class="stat-card">
-                    <span class="stat-label">Total</span>
-                    <span class="stat-value" id="total-tasks">0</span>
+        <nav class="sidebar-nav">
+            <button class="nav-item active" data-view="project">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <rect x="3" y="3" width="7" height="7"></rect>
+                    <rect x="14" y="3" width="7" height="7"></rect>
+                    <rect x="14" y="14" width="7" height="7"></rect>
+                    <rect x="3" y="14" width="7" height="7"></rect>
+                </svg>
+                Tareas
+            </button>
+            
+         
+        </nav>
+
+        <div class="sidebar-footer">
+            <div class="stats-mini">
+                <div class="stat-mini">
+                    <span class="stat-mini-label">Total</span>
+                    <span class="stat-mini-value" id="sidebar-total">0</span>
                 </div>
-                <div class="stat-card stat-card--pending">
-                    <span class="stat-label">Pendientes</span>
-                    <span class="stat-value" id="pending-tasks">0</span>
+                <div class="stat-mini">
+                    <span class="stat-mini-label">Pendientes</span>
+                    <span class="stat-mini-value" id="sidebar-pending">0</span>
                 </div>
-                <div class="stat-card stat-card--completed">
-                    <span class="stat-label">Completadas</span>
-                    <span class="stat-value" id="completed-tasks">0</span>
+                <div class="stat-mini">
+                    <span class="stat-mini-label">Completadas</span>
+                    <span class="stat-mini-value" id="sidebar-completed">0</span>
                 </div>
-            </section>
+            </div>
+        </div>
+    </aside>
 
-            <!-- Sección de filtros -->
-            <section class="filter-section" aria-label="Filtros de tareas">
-                <div class="filter-buttons" role="group" aria-label="Filtrar tareas por estado">
-                    <button class="filter-btn active" data-filter="all" aria-pressed="true">
-                        Todas
-                    </button>
-                    <button class="filter-btn" data-filter="pending" aria-pressed="false">
-                        Pendientes
-                    </button>
-                    <button class="filter-btn" data-filter="completed" aria-pressed="false">
-                        Completadas
-                    </button>
-                </div>
-            </section>
-
-            <!-- Sección de formulario -->
-            <section class="form-section" aria-label="Agregar nueva tarea">
-                <h2 class="section-title">Nueva Tarea</h2>
-                <form id="task-form" class="task-form" novalidate>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="task-title" class="form-label">
-                                Título <span class="required">*</span>
-                            </label>
-                            <input 
-                                type="text" 
-                                id="task-title" 
-                                name="title"
-                                class="form-input" 
-                                placeholder="Ej: Completar informe mensual"
-                                required
-                                minlength="3"
-                                aria-required="true"
-                                aria-describedby="title-error"
-                            >
-                            <span class="error-message" id="title-error"></span>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="task-priority" class="form-label">
-                                Prioridad <span class="required">*</span>
-                            </label>
-                            <select 
-                                id="task-priority" 
-                                name="priority"
-                                class="form-select"
-                                required
-                                aria-required="true"
-                            >
-                                <option value="">Seleccionar prioridad</option>
-                                <option value="low">Baja</option>
-                                <option value="medium">Media</option>
-                                <option value="high">Alta</option>
-                            </select>
-                            <span class="error-message" id="priority-error"></span>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="task-deadline" class="form-label">
-                                Fecha límite
-                            </label>
-                            <input 
-                                type="date" 
-                                id="task-deadline" 
-                                name="deadline"
-                                class="form-input"
-                                aria-describedby="deadline-hint"
-                            >
-                            <small class="form-hint" id="deadline-hint">Opcional</small>
-                        </div>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="task-description" class="form-label">
-                            Descripción
-                        </label>
-                        <textarea 
-                            id="task-description" 
-                            name="description"
-                            class="form-textarea" 
-                            rows="3"
-                            placeholder="Detalles adicionales sobre la tarea..."
-                        ></textarea>
-                    </div>
-
-                    <div class="form-actions">
-                        <button type="submit" class="btn btn-primary" id="submit-btn">
-                            <svg class="btn-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                                <line x1="12" y1="5" x2="12" y2="19"></line>
-                                <line x1="5" y1="12" x2="19" y2="12"></line>
-                            </svg>
-                            Agregar Tarea
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Header -->
+        <header class="content-header">
+            <div class="header-left">
+                <h1 class="page-title">Mis Tareas</h1>
+                <div class="header-actions">
+                    <div class="filter-group">
+                        <button class="filter-chip active" data-filter="all">
+                            Todas
                         </button>
-                        <button type="button" class="btn btn-secondary" id="cancel-btn" style="display: none;">
-                            Cancelar
+                        <button class="filter-chip pending" data-filter="pending">
+                            Pendientes
+                        </button>
+                        <button class="filter-chip" data-filter="completed">
+                            Completadas
                         </button>
                     </div>
-                </form>
-            </section>
-
-            <!-- Sección de lista de tareas -->
-            <section class="tasks-section" aria-label="Lista de tareas">
-                <h2 class="section-title">Mis Tareas</h2>
-                <div id="tasks-list" class="tasks-list">
-                    <!-- Las tareas se cargarán dinámicamente aquí -->
+                   
                 </div>
-                <div id="empty-state" class="empty-state">
-                    <svg class="empty-icon" width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                        <path d="M9 11l3 3L22 4"></path>
-                        <path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"></path>
+            </div>
+            <div class="header-right">
+       
+                <button class="btn-primary" id="new-task-btn">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <line x1="12" y1="5" x2="12" y2="19"></line>
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
                     </svg>
-                    <h3 class="empty-title">No hay tareas</h3>
-                    <p class="empty-description">Comienza agregando tu primera tarea</p>
+                    Nueva tarea
+                </button>
+            </div>
+        </header>
+
+        <!-- Project Section -->
+        <div class="project-section">
+            <div class="project-header">
+                <div class="project-title-group">
+                    <button class="collapse-btn" id="collapse-project">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                            <polyline points="6 9 12 15 18 9"></polyline>
+                        </svg>
+                    </button>
+                    <h2 class="project-name"> Tareas</h2>
+                    <span class="project-count" id="project-count">0</span>
                 </div>
-            </section>
+            </div>
+
+            <!-- Table -->
+            <div class="tasks-table">
+                <div class="table-header">
+                    <div class="table-cell table-cell-checkbox"></div>
+                    <div class="table-cell table-cell-name">Nombre de tarea</div>
+                    <div class="table-cell table-cell-status">Estado</div>
+                    <div class="table-cell table-cell-responsible">Responsable</div>
+                    <div class="table-cell table-cell-date">Fecha límite</div>
+                    <div class="table-cell table-cell-priority">Prioridad</div>
+                    <div class="table-cell table-cell-summary">Descripcion</div>
+                </div>
+
+                <div class="table-body" id="tasks-table-body">
+                    <!-- Tasks will be rendered here -->
+                </div>
+            </div>
+
+            <div class="complete-count">
+                COMPLETE <span id="complete-count">0/0</span>
+            </div>
+        </div>
+
+        <!-- Empty State -->
+        <div class="empty-state" id="empty-state">
+            <svg class="empty-icon" width="120" height="120" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path d="M9 11l3 3L22 4"></path>
+                <path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"></path>
+            </svg>
+            <h3 class="empty-title">No hay tareas</h3>
+            <p class="empty-description">Comienza creando tu primera tarea</p>
+            <button class="btn-primary" onclick="document.getElementById('new-task-btn').click()">
+                Nueva tarea
+            </button>
         </div>
     </main>
 
-    <footer class="app-footer">
-        <div class="container">
-            <p>&copy; 2026 Gestor de Tareas. Desarrollado para GLOBTECx</p>
+    <!-- Side Panel -->
+    <aside class="side-panel" id="side-panel">
+        <div class="panel-header">
+            <h2 class="panel-title" id="panel-title">Detalles de la tarea</h2>
+            <button class="panel-close" id="panel-close">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+            </button>
         </div>
-    </footer>
 
-    <!-- Modal de confirmación -->
-    <div id="confirm-modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
-        <div class="modal-content">
-            <h3 id="modal-title" class="modal-title">Confirmar eliminación</h3>
-            <p class="modal-message">¿Estás seguro de que deseas eliminar esta tarea?</p>
-            <div class="modal-actions">
-                <button class="btn btn-danger" id="confirm-delete-btn">Eliminar</button>
-                <button class="btn btn-secondary" id="cancel-delete-btn">Cancelar</button>
+        <div class="panel-content" id="panel-content">
+            <!-- Task details will be rendered here -->
+        </div>
+    </aside>
+
+    <!-- Modal for New Task -->
+    <div class="modal" id="task-modal">
+        <div class="modal-overlay" id="modal-overlay"></div>
+        <div class="modal-content-wrapper">
+            <div class="modal-header">
+                <h2 class="modal-title" id="modal-title">Nueva Tarea</h2>
+                <button class="modal-close" id="modal-close">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
             </div>
+
+            <form class="modal-form" id="task-form">
+                <div class="form-group">
+                    <label class="form-label">Nombre de tarea <span class="required">*</span></label>
+                    <input type="text" class="form-input" id="task-name" placeholder="Ej: Completar informe mensual" required>
+                    <span class="error-message" id="name-error"></span>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Estado</label>
+                        <select class="form-select" id="task-status">
+                            <option value="todo">Sin empezar</option>
+                            <option value="in-progress">En progreso</option>
+                            <option value="completed">Completada</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Prioridad <span class="required">*</span></label>
+                        <select class="form-select" id="task-priority" required>
+                            <option value="">Seleccionar</option>
+                            <option value="low">Baja</option>
+                            <option value="medium">Media</option>
+                            <option value="high">Alta</option>
+                        </select>
+                        <span class="error-message" id="priority-error"></span>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Responsable</label>
+                        <input type="text" class="form-input" id="task-responsible" placeholder="Nombre del responsable">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Fecha límite</label>
+                        <input type="date" class="form-input" id="task-date">
+                    </div>
+                </div>
+
+               
+
+                <div class="form-group">
+                    <label class="form-label">Descripción <span class="required">*</span> </label>
+                    <textarea class="form-textarea" id="task-description" rows="4" placeholder="Detalles adicionales..."></textarea>
+                    <span class="error-message" id="description-error"></span>
+
+                </div>
+
+               
+
+                <div class="modal-actions">
+                    <button type="button" class="btn-secondary" id="cancel-modal-btn">Cancelar</button>
+                    <button type="submit" class="btn-primary" id="submit-modal-btn">Crear tarea</button>
+                </div>
+            </form>
         </div>
     </div>
 
